@@ -1,5 +1,10 @@
 # rustsockets
-Websockets with warp in Rust. Built using a tutorial I found, with an example repository from a LogRocket aricle. Definitely didn't write all of this but I added the tests.
+Websockets with warp in Rust. Built using a tutorial I found, with an example repository from a LogRocket aricle. Definitely didn't write all of this 😅 but I added the tests.
+
+Next steps:
+- Add executables for a couple of target release platforms
+- Authenticated `/register`
+- Companion client side chat app?
 
 Run with
 
