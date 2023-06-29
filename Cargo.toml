@@ -1,8 +1,8 @@
 [package]
-name = "rustsockets-cq"
+name = "autobattler-backend"
 version = "0.1.0"
 authors = ["Chris Quinn <chrisquinnr@gmail.com>"]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 tokio = { version = "1.19.2", features = ["macros", "sync", "rt-multi-thread"] }
