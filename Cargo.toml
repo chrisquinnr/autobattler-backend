@@ -1,5 +1,5 @@
 [package]
-name = "rustsockets_cq"
+name = "rustsockets-cq"
 version = "0.1.0"
 authors = ["Chris Quinn <chrisquinnr@gmail.com>"]
 edition = "2018"
@@ -12,3 +12,4 @@ serde = {version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 futures = { version = "0.3", default-features = false }
 uuid = { version = "1.1.2", features = ["serde", "v4"] }
+rand = "0.8"

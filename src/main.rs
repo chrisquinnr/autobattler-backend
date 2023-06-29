@@ -2,8 +2,10 @@ use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::Arc;
 use tokio::sync::{mpsc, RwLock};
-use warp::{ws::Message, Filter, Rejection};
+use warp::{http::Method, ws::Message, Filter, Rejection};
 
+pub mod battle;
+pub mod fixtures;
 pub mod handler;
 pub mod ws;
 
@@ -46,11 +48,50 @@ pub async fn main() {
         .and(with_clients(clients.clone()))
         .and_then(handler::ws_handler);
 
+    let teams = warp::path("api")
+        .and(warp::path("team"))
+        .and(warp::get())
+        .and_then(battle::get_team);
+
+    let oppo = warp::path("api")
+        .and(warp::path("opposition"))
+        .and(warp::get())
+        .and_then(battle::get_opposition);
+
+    let battle = warp::path("api")
+        .and(warp::path("battle"))
+        .and(warp::get())
+        .and_then(battle::get_battle_result);
+
     let routes = health_route
         .or(register_routes)
         .or(ws_route)
         .or(publish)
-        .with(warp::cors().allow_any_origin());
+        .or(teams)
+        .or(oppo)
+        .or(battle)
+        .with(
+            warp::cors()
+                .allow_any_origin()
+                .allow_headers(vec![
+                    "Access-Control-Allow-Headers",
+                    "Access-Control-Request-Method",
+                    "Access-Control-Request-Headers",
+                    "Origin",
+                    "Accept",
+                    "X-Requested-With",
+                    "Content-Type",
+                ])
+                .allow_methods(&[
+                    Method::GET,
+                    Method::POST,
+                    Method::PUT,
+                    Method::PATCH,
+                    Method::DELETE,
+                    Method::OPTIONS,
+                    Method::HEAD,
+                ]),
+        );
 
     warp::serve(routes).run(([127, 0, 0, 1], 8000)).await;
 }

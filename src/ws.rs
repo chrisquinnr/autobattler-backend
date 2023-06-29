@@ -48,11 +48,7 @@ async fn client_msg(id: &str, msg: Message, clients: &Clients) {
         Ok(v) => v,
         Err(_) => return,
     };
-
-    if message == "ping" || message == "ping\n" {
-        return;
-    }
-
+    print!("{:?}", message);
     let topics_req: TopicsRequest = match from_str(&message) {
         Ok(v) => v,
         Err(e) => {
@@ -60,7 +56,7 @@ async fn client_msg(id: &str, msg: Message, clients: &Clients) {
             return;
         }
     };
-
+    print!("{:?}", topics_req);
     let mut locked = clients.write().await;
     if let Some(v) = locked.get_mut(id) {
         v.topics = topics_req.topics;
