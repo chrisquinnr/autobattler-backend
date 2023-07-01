@@ -19,6 +19,7 @@ pub fn get_opposition_fixtures() -> Vec<Character> {
         Character {
             src: "./assets/blob.png".to_string(),
             name: "Goon 1".to_string(),
+            character_type: "none".to_string(),
             stats: Stats {
                 str: 5,
                 def: 1,
@@ -29,6 +30,7 @@ pub fn get_opposition_fixtures() -> Vec<Character> {
         Character {
             src: "./assets/blob.png".to_string(),
             name: "Goon 2".to_string(),
+            character_type: "none".to_string(),
             stats: Stats {
                 str: 5,
                 def: 1,
@@ -39,6 +41,7 @@ pub fn get_opposition_fixtures() -> Vec<Character> {
         Character {
             src: "./assets/demon.png".to_string(),
             name: "Demon".to_string(),
+            character_type: "none".to_string(),
             stats: Stats {
                 str: 6,
                 def: 2,
@@ -49,6 +52,7 @@ pub fn get_opposition_fixtures() -> Vec<Character> {
         Character {
             src: "./assets/boss.png".to_string(),
             name: "Overlord".to_string(),
+            character_type: "none".to_string(),
             stats: Stats {
                 str: 20,
                 def: 2,
@@ -72,6 +76,7 @@ pub fn get_team_fixtures() -> Vec<Character> {
         Character {
             src: "./assets/angel.png".to_string(),
             name: "Angel".to_string(),
+            character_type: "none".to_string(),
             stats: Stats {
                 str: 7,
                 def: 8,
@@ -82,6 +87,7 @@ pub fn get_team_fixtures() -> Vec<Character> {
         Character {
             src: "./assets/warlock.png".to_string(),
             name: "Warlock".to_string(),
+            character_type: "none".to_string(),
             stats: Stats {
                 str: 7,
                 def: 4,
@@ -90,8 +96,9 @@ pub fn get_team_fixtures() -> Vec<Character> {
             special_move: get_random_special_move(),
         },
         Character {
-            src: "./assets/knight.png".to_string(),
+            src: "./assets/knight/knight-idle.gif".to_string(),
             name: "Knight".to_string(),
+            character_type: "knight".to_string(),
             stats: Stats {
                 str: 6,
                 def: 4,

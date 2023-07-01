@@ -15,6 +15,7 @@ pub enum SpecialMove {
 pub struct Character {
     pub src: String,
     pub name: String,
+    pub character_type: String,
     pub stats: Stats,
     pub special_move: Option<SpecialMove>,
 }
