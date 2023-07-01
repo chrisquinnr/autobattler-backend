@@ -8,7 +8,7 @@ use warp::{Rejection, Reply};
 pub enum SpecialMove {
     Revival,
     GigaAttack,
-    Restore,
+    Heal,
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -36,6 +36,7 @@ struct BattleStep {
     attacker: String,
     defender: String,
     damage: u32,
+    healed: u32,
     remaining_hp: u32,
     who: String,
     is_special: bool,
@@ -60,7 +61,7 @@ fn perform_battle_round(
         return;
     }
 
-    print!("Performing battle round!\n");
+    print!("-------------------Performing battle round!\n");
 
     let mut rng = rand::thread_rng();
     let attack_index = rng.gen_range(0..attack.characters.len());
@@ -68,12 +69,6 @@ fn perform_battle_round(
 
     let attack_character = &mut attack.characters[attack_index];
     let defence_character = &mut defence.characters[defence_index];
-
-    let damage = attack_character
-        .stats
-        .str
-        .saturating_sub(defence_character.stats.def);
-    defence_character.stats.hp = defence_character.stats.hp.saturating_sub(damage);
 
     // Special Move: Revival
     // if let Some(SpecialMove::Revival) = attack_character.special_move {
@@ -86,46 +81,77 @@ fn perform_battle_round(
     //     }
     // }
 
-    // Special Move: Restore
-    // if let Some(SpecialMove::Restore) = attacker.special_move {
-    //     let restore_hp = (attacker.stats.hp as f32 * 0.2) as i32;
-    //     for team in teams {
-    //         for character in team {
-    //             if character != attacker {
-    //                 character.stats.hp = (character.stats.hp + restore_hp).min(100);
-    //                 // Ensure HP does not exceed 100
-    //             }
-    //         }
-    //     }
-    //     battle_log.push(format!(
-    //         "{} uses Restore to heal their team for {} HP!",
-    //         attacker.name, restore_hp
-    //     ));
-    // }
+    let damage = attack_character
+        .stats
+        .str
+        .saturating_sub(defence_character.stats.def);
+    defence_character.stats.hp = defence_character.stats.hp.saturating_sub(damage);
 
-    let mut step = BattleStep {
+    let step = BattleStep {
         attacker: attack_character.name.clone(),
         defender: defence_character.name.clone(),
         damage,
+        healed: 0,
         remaining_hp: defence_character.stats.hp,
         who: who.to_string(),
         is_special: false,
     };
 
+    steps.push(step);
+
     // Special Move: GigaAttack
     if let Some(SpecialMove::GigaAttack) = attack_character.special_move {
-        let giga_damage = attack_character.stats.str * 3;
-        defence_character.stats.hp = defence_character.stats.hp.saturating_sub(giga_damage);
-        step = BattleStep {
-            attacker: attack_character.name.clone(),
-            defender: defence_character.name.clone(),
-            damage: giga_damage.clone(),
-            remaining_hp: defence_character.stats.hp,
-            who: who.to_string(),
-            is_special: true,
-        };
+        print!("{:?} is GIGA!\n", attack_character.name.clone());
+        let giga_chance = rand::thread_rng().gen_range(1..=3);
+        if giga_chance == 1 && defence_character.stats.hp > 0 {
+            let giga_damage = attack_character.stats.str * 2;
+            print!(
+                "{:?}, SLAPS {} DAMAGE!\n",
+                attack_character.name.clone(),
+                giga_damage
+            );
+            defence_character.stats.hp = defence_character.stats.hp.saturating_sub(giga_damage);
+            let special_move_step = BattleStep {
+                attacker: attack_character.name.clone(),
+                defender: defence_character.name.clone(),
+                damage: giga_damage.clone(),
+                healed: 0,
+                remaining_hp: defence_character.stats.hp,
+                who: who.to_string(),
+                is_special: true,
+            };
+            steps.push(special_move_step);
+        }
     }
-    steps.push(step);
+
+    // Special Move: Heal
+    if let Some(SpecialMove::Heal) = attack_character.special_move {
+        print!(
+            "{:?} is morbing heal!\n they have special ability {:?}\n",
+            attack_character.name.clone(),
+            attack_character.special_move,
+        );
+        let heal_chance = rand::thread_rng().gen_range(1..=2);
+        if heal_chance == 1 {
+            let restore_hp = (attack_character.stats.hp as f32 * 0.4) as u32;
+            attack_character.stats.hp = (attack_character.stats.hp + restore_hp).min(100);
+            print!(
+                "{:?}, heals {} HP!\n",
+                attack_character.name.clone(),
+                restore_hp
+            );
+            let special_move_step = BattleStep {
+                attacker: attack_character.name.clone(),
+                defender: "null".to_string(),
+                damage: 0,
+                healed: restore_hp,
+                remaining_hp: 0,
+                who: who.to_string(),
+                is_special: true,
+            };
+            steps.push(special_move_step);
+        }
+    }
 
     print!(
         "Team 1 character: {:?} deals damage {}\n",
@@ -139,6 +165,8 @@ fn perform_battle_round(
         print!("Team 2 character: {:?} is dead!\n", defence_character.name);
         defence.characters.remove(defence_index);
     }
+
+    print!("-------------------End battle round!\n");
 }
 
 pub async fn get_battle_result() -> Result<impl Reply, Rejection> {
@@ -153,7 +181,6 @@ pub async fn get_battle_result() -> Result<impl Reply, Rejection> {
 
     let mut steps = Vec::new();
 
-    print!("Lets go!");
     while !team.characters.is_empty() && !opposition.characters.is_empty() {
         perform_battle_round(&mut team, &mut opposition, &mut steps, "player");
         perform_battle_round(&mut opposition, &mut team, &mut steps, "ai");
@@ -170,7 +197,7 @@ pub async fn get_battle_result() -> Result<impl Reply, Rejection> {
         "steps": steps,
     });
 
-    print!("{}", response);
-
+    // print!("{}", response);
+    println!("**End**");
     Ok(warp::reply::json(&response))
 }
