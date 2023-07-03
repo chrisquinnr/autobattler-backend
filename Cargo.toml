@@ -1,5 +1,5 @@
 [package]
-name = "autobattler-backend"
+name = "autobattler-backend-v2"
 version = "0.1.0"
 authors = ["Chris Quinn <chrisquinnr@gmail.com>"]
 edition = "2021"
