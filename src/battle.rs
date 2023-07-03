@@ -62,8 +62,6 @@ fn perform_battle_round(
         return;
     }
 
-    print!("-------------------Performing battle round!\n");
-
     let mut rng = rand::thread_rng();
     let attack_index = rng.gen_range(0..attack.characters.len());
     let defence_index = rng.gen_range(0..defence.characters.len());
@@ -81,38 +79,42 @@ fn perform_battle_round(
     //         ));
     //     }
     // }
-
-    let damage = attack_character
-        .stats
-        .str
-        .saturating_sub(defence_character.stats.def);
-    defence_character.stats.hp = defence_character.stats.hp.saturating_sub(damage);
-
-    let step = BattleStep {
+    let mut step = BattleStep {
         attacker: attack_character.name.clone(),
         defender: defence_character.name.clone(),
-        damage,
+        damage: 0,
         healed: 0,
         remaining_hp: defence_character.stats.hp,
         who: who.to_string(),
         is_special: false,
     };
 
-    steps.push(step);
+    let attack_chance = rand::thread_rng().gen_range(1..=10);
+    if attack_chance >= 3 {
+        let damage = attack_character
+            .stats
+            .str
+            .saturating_sub(defence_character.stats.def);
+        defence_character.stats.hp = defence_character.stats.hp.saturating_sub(damage);
+
+        step = BattleStep {
+            attacker: attack_character.name.clone(),
+            defender: defence_character.name.clone(),
+            damage,
+            healed: 0,
+            remaining_hp: defence_character.stats.hp,
+            who: who.to_string(),
+            is_special: false,
+        };
+    }
 
     // Special Move: GigaAttack
     if let Some(SpecialMove::GigaAttack) = attack_character.special_move {
-        print!("{:?} is GIGA!\n", attack_character.name.clone());
         let giga_chance = rand::thread_rng().gen_range(1..=3);
-        if giga_chance == 1 && defence_character.stats.hp > 0 {
+        if giga_chance == 1 && attack_chance > 3 && defence_character.stats.hp > 0 {
             let giga_damage = attack_character.stats.str * 2;
-            print!(
-                "{:?}, SLAPS {} DAMAGE!\n",
-                attack_character.name.clone(),
-                giga_damage
-            );
             defence_character.stats.hp = defence_character.stats.hp.saturating_sub(giga_damage);
-            let special_move_step = BattleStep {
+            step = BattleStep {
                 attacker: attack_character.name.clone(),
                 defender: defence_character.name.clone(),
                 damage: giga_damage.clone(),
@@ -121,53 +123,36 @@ fn perform_battle_round(
                 who: who.to_string(),
                 is_special: true,
             };
-            steps.push(special_move_step);
         }
     }
 
     // Special Move: Heal
     if let Some(SpecialMove::Heal) = attack_character.special_move {
-        print!(
-            "{:?} is morbing heal!\n they have special ability {:?}\n",
-            attack_character.name.clone(),
-            attack_character.special_move,
-        );
-        let heal_chance = rand::thread_rng().gen_range(1..=2);
+        let mut heal_range = 4;
+        if attack_character.stats.hp < 21 {
+            heal_range = 3;
+        }
+        let heal_chance = rand::thread_rng().gen_range(1..=heal_range);
         if heal_chance == 1 {
-            let restore_hp = (attack_character.stats.hp as f32 * 0.4) as u32;
-            attack_character.stats.hp = (attack_character.stats.hp + restore_hp).min(100);
-            print!(
-                "{:?}, heals {} HP!\n",
-                attack_character.name.clone(),
-                restore_hp
-            );
-            let special_move_step = BattleStep {
+            let restore_hp = attack_character.stats.hp / 4;
+            attack_character.stats.hp = attack_character.stats.hp + restore_hp;
+            step = BattleStep {
                 attacker: attack_character.name.clone(),
                 defender: "null".to_string(),
                 damage: 0,
                 healed: restore_hp,
-                remaining_hp: 0,
+                remaining_hp: defence_character.stats.hp,
                 who: who.to_string(),
                 is_special: true,
             };
-            steps.push(special_move_step);
         }
     }
 
-    print!(
-        "Team 1 character: {:?} deals damage {}\n",
-        attack_character.name, damage
-    );
-    print!(
-        "Team 2 character: {:?} is now at {}, HP!\n",
-        defence_character.name, defence_character.stats.hp
-    );
     if defence_character.stats.hp < 1 {
-        print!("Team 2 character: {:?} is dead!\n", defence_character.name);
         defence.characters.remove(defence_index);
     }
 
-    print!("-------------------End battle round!\n");
+    steps.push(step);
 }
 
 pub async fn get_battle_result() -> Result<impl Reply, Rejection> {
@@ -198,7 +183,7 @@ pub async fn get_battle_result() -> Result<impl Reply, Rejection> {
         "steps": steps,
     });
 
-    // print!("{}", response);
+    print!("{}", response);
     println!("**End**");
     Ok(warp::reply::json(&response))
 }
